@@ -27,7 +27,6 @@ public class AcessoMysql {
         return instancia;
     }
     
-    private Connection con;
     
     private AcessoMysql(){
         conectar();
@@ -35,8 +34,7 @@ public class AcessoMysql {
     
     public final Connection conectar(){
         try{
-        Class.forName("com.mysql.jdbc.Driver");
-        con = DriverManager.getConnection("jdbc:mysql://127.0.0.1/carteirinhas","root","root");
+         private Connection con = DriverManager.getConnection("jdbc:mysql://127.0.0.1/carteirinhas","root","root");
         } catch(ClassNotFoundException ex){
             System.out.println("Não foi possível encontrar o Driver!");
         } catch(SQLException ex){
