@@ -10,7 +10,6 @@ import Classes.Funcionario;
 import Controles.AdministradorDAO;
 import Controles.Tabela;
 import java.sql.SQLException;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,6 +18,9 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  *
@@ -618,8 +620,25 @@ public class Funcionarios extends javax.swing.JFrame {
         dao = null;
         return resultado;
     }
+    
+    public boolean validarDataNascimento(String dataNascimento){
+        Date data = null;
+        
+        String dataTexto = new String(dataNascimento);
+        SimpleDateFormat formatoData = new SimpleDateFormat("dd/MM/yyyy");
+        try{
+            formatoData.setLenient(false);
+            data = formatoData.parse(dataTexto);
+            return true;
+        } catch(ParseException e){
+            JOptionPane.showMessageDialog(null, "Data de Nascimento Inválida. Digite uma data Válida!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            tfDataNascimento.requestFocus();
+            return false;
+        }
+    }
+    
     private void cadastraFuncionario(){
-        if(verificaNome() && verificaCpf("%"+tfCpf.getText().trim()+"%") && verificaLogin("%"+tfLogin+"%") && verificaUf() && verificaDataNascimento() && verificaLogin() && verificaSenha()){
+        if(verificaNome() && verificaCpf("%"+tfCpf.getText().trim()+"%") && verificaLogin("%"+tfLogin+"%") && verificaUf() && verificaDataNascimento() && verificaLogin() && verificaSenha() && validarDataNascimento(tfDataNascimento.getText().trim())){
             try {
                 Funcionario func = new Funcionario();
                 
@@ -649,7 +668,7 @@ public class Funcionarios extends javax.swing.JFrame {
         while(tmFuncionarios.getRowCount()>0){
             tmFuncionarios.removeRow(0);
         }
-        if(funcionarios.size()==0){
+        if(funcionarios.isEmpty()){
             JOptionPane.showMessageDialog(null, "Nenhum funcionário encontrado!");
         } else {
             String [] linha = new String[]{null, null, null, null};

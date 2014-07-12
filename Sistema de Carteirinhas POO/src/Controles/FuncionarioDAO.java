@@ -31,8 +31,7 @@ public class FuncionarioDAO {
     String cadastraEstudante = "INSERT INTO estudantes (NOME, CPF, TELEFONE,INSTITUICAO_ENSINO, CURSO, DATA_NASCIMENTO, NUMERO_MATRICULA, FOTO)"
             + " VALUES (?,?,?,?,?,?,?,?)";
     String consultaEstudante = "SELECT * FROM estudantes WHERE NOME LIKE ?";
-    String alteraEstudante = "UPDATE estudantes SET nome=?, cpf=?, telefone=?, instituicao_ensino=?, curso=?,"
-            + "numero_matricula=?, data_nascimento=?, foto=? where id=?";
+    
     
     /**
      * Cadastra um estudante no banco de dados.
@@ -77,14 +76,16 @@ public class FuncionarioDAO {
     /**
      * Lista estudantes cadastrados no banco de dados pelo nome
      * @param nome
-     * @return
+     * @return lista de estudantes contendo todos os dados doestudante
      * @throws SQLException
      * @throws Exception 
      */
 
     public List<Estudante> listarEstudantes(String nome) throws SQLException, Exception {
-        String sql = "SELECT estudantes.*, carteirinhas.*"
-                + " FROM estudantes INNER JOIN carteirinhas ON "
+        String sql = "SELECT estudantes.id, estudantes.nome, estudantes.cpf, estudantes.telefone,"
+                + "estudantes.instituicao_ensino, estudantes.curso, estudantes.data_nascimento,"
+                + "estudantes.numero_matricula, estudantes.foto, carteirinhas.id_estudante, carteirinhas.data_emissao,"
+                + "carteirinhas.data_vencimento FROM estudantes INNER JOIN carteirinhas ON "
                 + "estudantes.id = carteirinhas.id_estudante WHERE estudantes.nome LIKE ?";
         List<Estudante> estudantes = new ArrayList<>();
 
@@ -93,13 +94,9 @@ public class FuncionarioDAO {
         rs = pstm.executeQuery();
 
         while (rs.next()) {
-            
-            Carteirinha carteirinha = new Carteirinha();
-            carteirinha.setDataEmissao(rs.getString("data_emissao"));
-            carteirinha.setDataValidade(rs.getString("data_vencimento"));
-            
+                      
             Estudante estudante = new Estudante();
-            estudante.setId(Integer.valueOf(rs.getString("id_estudante")));
+            estudante.setId(Integer.valueOf(rs.getString("id")));
             estudante.setNome(rs.getString("nome"));
             estudante.setCpf(rs.getString("cpf"));
             estudante.setTelefone(rs.getString("telefone"));
@@ -108,6 +105,11 @@ public class FuncionarioDAO {
             estudante.setDataNascimento(rs.getString("data_nascimento"));
             estudante.setNumeroMatricula(rs.getString("numero_matricula"));
             estudante.setFoto(rs.getString("foto"));
+            
+            Carteirinha carteirinha = new Carteirinha();
+            carteirinha.setDataEmissao(rs.getString("data_emissao"));
+            carteirinha.setDataValidade(rs.getString("data_vencimento"));
+            
             estudante.setCarteirinha(carteirinha);
            
             estudantes.add(estudante);
@@ -121,7 +123,7 @@ public class FuncionarioDAO {
     /**
      * Lista estudantes cadastrados no banco de dados pelo CPF
      * @param cpf
-     * @return
+     * @return lista de estudantes contendo apenas o ID
      * @throws SQLException
      */
     public List<Estudante> listarEstudantesCpf(String cpf) throws SQLException {
@@ -148,7 +150,7 @@ public class FuncionarioDAO {
     /**
      * Lista estudantes cadastrados no banco de dados pela instituição de ensino
      * @param instituicaoEnsino
-     * @return
+     * @return lista de estudantes contendo apenas o ID
      * @throws SQLException
      */
     public List<Estudante> listarEstudantesInstituicao(String instituicaoEnsino) throws SQLException {
@@ -176,7 +178,7 @@ public class FuncionarioDAO {
     /**
      * Lista estudantes cadastrados no banco de dados pelo número de matricula
      * @param numeroMatricula
-     * @return
+     * @return lista de estudantes contendo apenas o ID
      * @throws SQLException
      */
     public List<Estudante> listarEstudantesMatricula(String numeroMatricula) throws SQLException {
@@ -206,18 +208,21 @@ public class FuncionarioDAO {
      * @throws SQLException
      */
     public void alteraEstudante(Estudante estudante) throws SQLException {
+        String sql = "UPDATE estudantes SET nome=?, cpf=?, telefone=?, INSTITUICAO_ENSINO=?, curso=?, "
+            + "DATA_NASCIMENTO=?, NUMERO_MATRICULA=?, foto=? where id=?";
 
-        pstm = AcessoMysql.getInstance().conectar().prepareStatement(alteraEstudante);
+        pstm = AcessoMysql.getInstance().conectar().prepareStatement(sql);
 
-        pstm.setString(1, estudante.getNome());
-        pstm.setString(2, estudante.getCpf());
-        pstm.setString(3, estudante.getTelefone());
-        pstm.setString(4, estudante.getInstituicaoDeEnsino());
-        pstm.setString(5, estudante.getCurso());
-        pstm.setString(6, estudante.getNumeroMatricula());
-        pstm.setString(7, estudante.getDataNascimento());
-        pstm.setString(8, estudante.getFoto());
-        pstm.setInt(9, estudante.getId());
+        pstm.setInt(1, estudante.getId());
+        pstm.setString(2, estudante.getNome());
+        pstm.setString(3, estudante.getCpf());
+        pstm.setString(4, estudante.getTelefone());
+        pstm.setString(5, estudante.getInstituicaoDeEnsino());
+        pstm.setString(6, estudante.getCurso());
+        pstm.setString(7, estudante.getNumeroMatricula());
+        pstm.setString(8, estudante.getDataNascimento());
+        pstm.setString(9, estudante.getFoto());
+        
 
         pstm.executeUpdate();
         AcessoMysql.getInstance().desconectar();
@@ -230,11 +235,12 @@ public class FuncionarioDAO {
      */
 
     public void revalidaCarteirinha(Carteirinha carteirinha) throws SQLException {
-        String sql = "UPDATE carteirinhas SET data_vencimento=? WHERE id = ?";
+        String sql = "UPDATE carteirinhas SET data_vencimento=? WHERE id_carteirinha=?";
 
         pstm = AcessoMysql.getInstance().conectar().prepareStatement(sql);
 
         pstm.setString(1, carteirinha.getDataValidade());
+        pstm.setInt(2, carteirinha.getId());
 
         pstm.executeUpdate();
         AcessoMysql.getInstance().desconectar();
@@ -251,6 +257,7 @@ public class FuncionarioDAO {
         pstm = AcessoMysql.getInstance().conectar().prepareStatement(sql);
 
         pstm.setString(1, funcionario.getSenha());
+        
 
         pstm.executeUpdate();
         AcessoMysql.getInstance().desconectar();

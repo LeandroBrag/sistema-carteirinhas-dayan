@@ -17,7 +17,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,17 +55,17 @@ public class Estudantes extends javax.swing.JFrame {
      */
     public Estudantes() {
         initComponents();
-        criFileChooser();
+        criaFileChooser();
 
     }
 
     
-    private void criFileChooser() {
+    private void criaFileChooser() {
         jfcFoto.setFileFilter(new FileNameExtensionFilter("Image Files", "jpeg", "jpg", "png"));
         jfcFoto.setAcceptAllFileFilterUsed(false);
         jfcFoto.setFileSelectionMode(JFileChooser.FILES_ONLY);
         jfcFoto.setApproveButtonText("Selecionar");
-        jfcFoto.setCurrentDirectory(new File("C:\\Users\\note\\Pictures\\"));
+        jfcFoto.setCurrentDirectory(new File("C:\\Users\\note\\"));
         jfcFoto.setMultiSelectionEnabled(false);
         jfcFoto.setFileHidingEnabled(true);
         
@@ -132,10 +137,11 @@ public class Estudantes extends javax.swing.JFrame {
                 }
             }
         });
-        tbEstudantes.getColumnModel().getColumn(0).setPreferredWidth(150);
+        tbEstudantes.getColumnModel().getColumn(0).setPreferredWidth(100);
         tbEstudantes.getColumnModel().getColumn(1).setPreferredWidth(150);
         tbEstudantes.getColumnModel().getColumn(2).setPreferredWidth(150);
         tbEstudantes.getColumnModel().getColumn(3).setPreferredWidth(120);
+        tbEstudantes.getColumnModel().getColumn(4).setPreferredWidth(120);
         tbEstudantes.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         jScrollPane1.setViewportView(tbEstudantes);
 
@@ -539,7 +545,100 @@ public class Estudantes extends javax.swing.JFrame {
         tfCurso.setText("");
         tfNumeroMatricula.setText("");
     }
-
+    /**
+     * Compara as datas de validade e emissão e só deixará o cadastro prosseguir se a data de emissão for menor que a data de validade.
+     * 
+     * @param dataEmissao
+     * @param dataValidade
+     * @return 
+     */
+    public boolean compararDatas(String dataEmissao, String dataValidade){
+        Date emissao = null;
+        Date validade = null;
+        
+        String newDate1 = new String(dataEmissao);
+        String newDate2 = new String(dataValidade);
+       
+        
+        SimpleDateFormat formatoData = new SimpleDateFormat("dd/MM/yyyy");
+        
+        try{
+            formatoData.setLenient(false);
+            emissao = formatoData.parse(dataEmissao);
+            validade = formatoData.parse(dataValidade);
+                    
+            
+            if(emissao.before(validade)){
+                return true;
+                
+            } else {
+                JOptionPane.showMessageDialog(null, "Data de Validade deverá ser maior que a Data de Emissão!");
+                tfDataValidade.requestFocus();
+                return false;
+            } 
+                        
+        } catch(ParseException e){
+            System.out.println(e);
+            return false;
+        }
+    }
+    
+    /**
+     * Verifica se a data de emissão e valida.
+     * @param dataEmissao
+     * @return 
+     */
+    public boolean validarDataEmissao(String dataEmissao){
+        Date data = null;
+        
+        String dataTexto = new String(dataEmissao);
+        SimpleDateFormat formatoData = new SimpleDateFormat("dd/MM/yyyy");
+        try{
+            formatoData.setLenient(false);
+            data = formatoData.parse(dataTexto);
+            return true;
+        } catch(ParseException e){
+            JOptionPane.showMessageDialog(null, "Data de Emissão Inválida. Digite uma data Válida!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            tfDataEmissao.requestFocus();
+            return false;
+        }
+    }
+    /**
+     * Verifica se a data de validade da carteirinha é valida.
+     * @param dataVencimento
+     * @return 
+     */
+    public boolean validarDataVencimento(String dataVencimento){
+        Date data = null;
+        
+        String dataTexto = new String(dataVencimento);
+        SimpleDateFormat formatoData = new SimpleDateFormat("dd/MM/yyyy");
+        try{
+            formatoData.setLenient(false);
+            data = formatoData.parse(dataTexto);
+            return true;
+        } catch(ParseException e){
+            JOptionPane.showMessageDialog(null, "Data de Validade Inválida. Digite uma data Válida!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            tfDataValidade.requestFocus();
+            return false;
+        }
+    }
+    
+    public boolean validarDataNascimento(String dataNascimento){
+        Date data = null;
+        
+        String dataTexto = new String(dataNascimento);
+        SimpleDateFormat formatoData = new SimpleDateFormat("dd/MM/yyyy");
+        try{
+            formatoData.setLenient(false);
+            data = formatoData.parse(dataTexto);
+            return true;
+        } catch(ParseException e){
+            JOptionPane.showMessageDialog(null, "Data de Nascimento Inválida. Digite uma data Válida!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            tfDataNascimento.requestFocus();
+            return false;
+        }
+    }
     /**
      * Verifica se o campo nome está vazio, se estiver ele não prossegue com o cadastro
      * @return 
@@ -582,7 +681,7 @@ public class Estudantes extends javax.swing.JFrame {
             return false;
         }
     }
-
+    
     /**
      * Verifica se o campo dataNascimento está vazio ou com uma data inválida, se estiver ele não prossegue com o cadastro
      * @return  true se o campo dataNascimento estiver preenchido e false se estiver vazio
@@ -691,7 +790,7 @@ public class Estudantes extends javax.swing.JFrame {
      * Cadastra o estudante no banco de dados  se todas as condições forem verdadeiras
      */
     public void cadastrarEstudante(){
-        if (verificaNome() && verificaCpf() && verificaDataNascimento() && verificaInstituicao() && verificaCurso() && verificaMatricula()) {
+        if (verificaNome() && verificaCpf() && verificaDataNascimento() && verificaInstituicao() && verificaCurso() && validarDataNascimento(tfDataNascimento.getText().trim()) && validarDataEmissao(tfDataEmissao.getText().trim()) && validarDataVencimento(tfDataValidade.getText().trim())) {
                  try {
                         Estudante estudante = new Estudante();
                         estudante.setNome(tfNome.getText().trim());
@@ -708,24 +807,27 @@ public class Estudantes extends javax.swing.JFrame {
                         carteirinha.setDataEmissao(tfDataEmissao.getText().trim());
                         carteirinha.setDataValidade(tfDataValidade.getText().trim());
                         
-                        
-                        FuncionarioDAO dao = new FuncionarioDAO();
-                        dao.cadastraEstudante(estudante);
-                        estudantes = dao.listarEstudantesCpf("%" + tfCpf.getText().trim() + "%");
-                        carteirinha.setId_estudante(estudantes.get(0).getId());
-                        dao.cadastraCarteirinha(carteirinha);
-                        JOptionPane.showMessageDialog(null, estudante.getNome() + " cadastrado com sucesso!");
-                        desabilitaCampos();
-                        
+                       if(compararDatas(tfDataEmissao.getText().trim(), tfDataValidade.getText().trim())){
+                            FuncionarioDAO dao = new FuncionarioDAO();
+                            dao.cadastraEstudante(estudante);
+                            estudantes = dao.listarEstudantesCpf("%" + tfCpf.getText().trim() + "%");
+                            carteirinha.setId_estudante(estudantes.get(0).getId());
+                            dao.cadastraCarteirinha(carteirinha);
+                            JOptionPane.showMessageDialog(null, estudante.getNome() + " cadastrado com sucesso!");
+                            desabilitaCampos();
+                       }   
                     } catch (SQLException ex) {
                         JOptionPane.showMessageDialog(null, "Cadastro não sucedido!");
                         System.out.println(ex);
-                    } 
+                    } catch(NullPointerException e){
+                        
+                        JOptionPane.showMessageDialog(null, "Foto obrigatória!");
+                    }
         } else{
             JOptionPane.showMessageDialog(null, "Não foi possível cadastrar o Estudante!");
         } 
        
-        desabilitaCampos();
+        
     }
     
     /**
@@ -762,13 +864,13 @@ public class Estudantes extends javax.swing.JFrame {
     private void listarEstudantes(){
         FuncionarioDAO dao = new FuncionarioDAO();
         try {
-            estudantes = dao.listarEstudantes("%" + tfPesquisa.getText().trim() + "%");
-            mostrarEstudantes(estudantes);
+            estudantes = dao.listarEstudantes("%" + tfPesquisa.getText().trim() + "%");  
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(null, "Erro na listagem de Estudantes!");
             System.out.println(ex);
         }
-               
+            mostrarEstudantes(estudantes);
+            //dao = null;
     }
     /**
      * Este método seta os valores dos textField's com os dados do estudante selecionado na tabela
@@ -800,7 +902,6 @@ public class Estudantes extends javax.swing.JFrame {
             habilitaCampos();
             tfDataEmissao.setEditable(false);
             tfDataValidade.setEditable(false);
-            tfCpf.setEditable(false);
             btExcluir.setEnabled(false);
             btNovo.setEnabled(false);
         } else {
@@ -812,25 +913,25 @@ public class Estudantes extends javax.swing.JFrame {
      * alteraEstudante da classe FuncionarioDAO
      */
     private void modificaEstudante(){
-        if (verificaNome() && verificaDataNascimento() && verificaInstituicao() && verificaCurso() && verificaMatricula()) {
+        if (verificaNome() && verificaDataNascimento() && verificaInstituicao() && verificaCurso()) {
             try {
-                Estudante estudante = new Estudante();
+                Estudante est = new Estudante();
                 
-                estudante.setNome(tfNome.getText().trim());
-                estudante.setCpf(tfCpf.getText().trim());
-                estudante.setTelefone(tfTelefone.getText().trim());
-                estudante.setInstituicaoDeEnsino(tfInstituicaoEnsino.getText().trim());
-                estudante.setCurso(tfCurso.getText().trim());
-                estudante.setNumeroMatricula(tfNumeroMatricula.getText().trim());
-                estudante.setDataNascimento(tfDataNascimento.getText().trim());
+                est.setNome(tfNome.getText().trim());
+                est.setCpf(tfCpf.getText().trim());
+                est.setTelefone(tfTelefone.getText().trim());
+                est.setInstituicaoDeEnsino(tfInstituicaoEnsino.getText().trim());
+                est.setCurso(tfCurso.getText().trim());
+                est.setNumeroMatricula(tfNumeroMatricula.getText().trim());
+                est.setDataNascimento(tfDataNascimento.getText().trim());
                 imagem();
-                estudante.setFoto(caminho);
-                estudante.setId(estudantes.get(tbEstudantes.getSelectedRow()).getId());
+                est.setFoto(caminho);
+                est.setId(estudantes.get(tbEstudantes.getSelectedRow()).getId());
                                          
                 
                 FuncionarioDAO dao = new FuncionarioDAO();
-                dao.alteraEstudante(estudante);
-                JOptionPane.showMessageDialog(null, estudante.getNome() + " atualizado com sucesso!");
+                dao.alteraEstudante(est);
+                JOptionPane.showMessageDialog(null, est.getNome() + " atualizado com sucesso!");
                 desabilitaCampos();
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(null, "Atualização não sucedida!");
@@ -893,13 +994,17 @@ public class Estudantes extends javax.swing.JFrame {
         File original = new File(caminho);
         File copia = new File("C:\\Users\\note\\Documents\\NetBeansProjects\\Sistema de Carteirinhas POO\\imagens\\"+cpf+".png");
         
-        if(!copia.exists()){
-            copiarImagem(original, copia);
-            caminho = copia.getAbsolutePath();
-        } else{
-           copia.delete();
-           copiarImagem(original, copia);
-           caminho = copia.getAbsolutePath();
+        try{
+                if(!copia.exists()){
+                copiarImagem(original, copia);
+                caminho = copia.getAbsolutePath();
+            } else{
+               copia.delete();
+               copiarImagem(original, copia);
+               caminho = copia.getAbsolutePath();
+            }
+        } catch(NullPointerException e){
+            JOptionPane.showMessageDialog(null, "Foto obrigatória!");
         }
     }
     

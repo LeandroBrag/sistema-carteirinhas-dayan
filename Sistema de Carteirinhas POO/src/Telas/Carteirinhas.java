@@ -10,6 +10,9 @@ import Classes.Carteirinha;
 import Controles.FuncionarioDAO;
 import Controles.Tabela;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -132,6 +135,11 @@ public class Carteirinhas extends javax.swing.JFrame {
 
         btSalvar.setText("Salvar");
         btSalvar.setEnabled(false);
+        btSalvar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btSalvarActionPerformed(evt);
+            }
+        });
 
         btRevalidar.setText("Revalidar");
         btRevalidar.addActionListener(new java.awt.event.ActionListener() {
@@ -315,6 +323,10 @@ public class Carteirinhas extends javax.swing.JFrame {
         tbCarteirinhas.getSelectionModel().clearSelection(); //limpa a tabela
     }//GEN-LAST:event_btFecharActionPerformed
 
+    private void btSalvarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btSalvarActionPerformed
+        modificaCarteirinha();
+    }//GEN-LAST:event_btSalvarActionPerformed
+
     private void habilitaCampos(){
         tfDataValidade.setEditable(true);
         btSalvar.setEnabled(true);
@@ -335,6 +347,23 @@ public class Carteirinhas extends javax.swing.JFrame {
         habilitaCampos();
         tfDataValidade.setText("");
     }
+    
+    
+    public boolean validarData(String dataVencimento){
+        Date data = null;
+        
+        String dataTexto = new String(dataVencimento);
+        SimpleDateFormat formatoData = new SimpleDateFormat("dd/MM/yyyy");
+        try{
+            formatoData.setLenient(false);
+            data = formatoData.parse(dataTexto);
+            return true;
+        } catch(ParseException e){
+            JOptionPane.showMessageDialog(null, "Data de Validade Inválida. Digite uma data Válida!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            tfDataValidade.requestFocus();
+            return false;
+        }
+    }
     private boolean verificaData(){
         if((!tfDataValidade.getText().trim().equals(""))){
             return true;
@@ -351,17 +380,48 @@ public class Carteirinhas extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(null, "Selecione uma carteirinha na tabela!");
         }
     }
+    public boolean compararDatas(String data1, String data2){
+        Date emissao = null;
+        Date validade = null;
+        
+        String newDate1 = new String(data1);
+        String newDate2 = new String(data2);
+        SimpleDateFormat formatoData = new SimpleDateFormat("dd/MM/yyyy");
+        
+        try{
+            formatoData.setLenient(false);
+            emissao = formatoData.parse(data1);
+            validade = formatoData.parse(data2);
+            if(emissao.before(validade)){
+                return true;
+            } else {
+                tfDataValidade.requestFocus();
+                JOptionPane.showMessageDialog(null, "Data de Validade deverá ser maior que a Data de Emissão!");
+                return false;
+            } 
+                        
+        } catch(ParseException e){
+            System.out.println(e);
+            return false;
+        }
+    }
     private void modificaCarteirinha(){
-        if(verificaData()){
+        if(verificaData() && validarData(tfDataValidade.getText().trim())){
             try {
                 Carteirinha carteirinha = new Carteirinha();
                 
                 carteirinha.setDataValidade(tfDataValidade.getText().trim());
+                carteirinha.setId(carteirinhas.get(tbCarteirinhas.getSelectedRow()).getId());
                 
-                FuncionarioDAO dao = new FuncionarioDAO();
-                dao.revalidaCarteirinha(carteirinha);
-                JOptionPane.showMessageDialog(null, "Data de validade alterada com sucesso!");
-                desabilitaCampos();
+                
+                if(compararDatas(tfDataEmissao.getText().trim(), tfDataValidade.getText().trim())){
+                    FuncionarioDAO dao = new FuncionarioDAO();
+                    dao.revalidaCarteirinha(carteirinha);
+                    JOptionPane.showMessageDialog(null, "Data de validade alterada com sucesso!");
+                    desabilitaCampos();
+                } else{
+                    habilitaCampos();
+                }
             } catch (SQLException ex) {
                 Logger.getLogger(Carteirinhas.class.getName()).log(Level.SEVERE, null, ex);
             }

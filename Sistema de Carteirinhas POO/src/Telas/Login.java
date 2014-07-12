@@ -7,6 +7,7 @@
 package Telas;
 
 import Controles.VerificaLogin;
+import java.awt.event.KeyEvent;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -193,7 +194,7 @@ public class Login extends javax.swing.JFrame {
     }//GEN-LAST:event_botaoSairActionPerformed
 
     private void botaoLoginKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_botaoLoginKeyPressed
-        // TODO add your handling code here:
+       
     }//GEN-LAST:event_botaoLoginKeyPressed
   
     
